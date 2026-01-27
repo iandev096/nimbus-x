@@ -1,0 +1,36 @@
+[
+	{
+		"__TYPE__": "SharedSliceContent",
+		"variation": "default",
+		"primary": {
+			"heading": {
+				"__TYPE__": "StructuredTextContent",
+				"value": [
+					{
+						"type": "heading1",
+						"content": {
+							"text": "Willing"
+						}
+					}
+				]
+			},
+			"body": {
+				"__TYPE__": "StructuredTextContent",
+				"value": [
+					{
+						"type": "paragraph",
+						"content": {
+							"text": "Reprehenderit veniam nostrud aliqua veniam eu minim tempor duis cupidatat adipisicing sint ex. Nostrud pariatur ad aliquip eu eiusmod irure proident in magna ad quis nulla ipsum laborum eu."
+						}
+					}
+				]
+			},
+			"buy_button_text": {
+				"__TYPE__": "FieldContent",
+				"value": "upward",
+				"type": "Text"
+			}
+		},
+		"items": []
+	}
+]
