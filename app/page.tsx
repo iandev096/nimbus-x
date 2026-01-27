@@ -1,6 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { capture } from "./lib/posthog-client";
 
 export default function Home() {
+  const handleCtaClick = (ctaType: string, url: string) => {
+    capture("cta_clicked", {
+      cta_type: ctaType,
+      destination_url: url,
+    });
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
@@ -40,6 +50,9 @@ export default function Home() {
             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              handleCtaClick("deploy_now", "https://vercel.com/new")
+            }
           >
             <Image
               className="dark:invert"
@@ -55,9 +68,17 @@ export default function Home() {
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              handleCtaClick("documentation", "https://nextjs.org/docs")
+            }
           >
             Documentation
           </a>
+          <button
+            onClick={() =>
+              handleCtaClick("error_test", "https://nextjs.org/docs")
+            }
+          ></button>
         </div>
       </main>
     </div>

@@ -14,6 +14,8 @@
     "@prismicio/next": "^2.2.1",
     "@prismicio/react": "^3.3.0",
     "next": "16.1.5",
+    "posthog-js": "^1.335.3",
+    "posthog-node": "^5.21.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
