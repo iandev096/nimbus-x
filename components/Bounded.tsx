@@ -18,6 +18,7 @@ export function Bounded({
   innerClassName,
   children,
   asChild = false,
+  ...props
 }: BoundedProps) {
   const Comp = asChild ? Slot : as;
 
@@ -27,6 +28,7 @@ export function Bounded({
         "px-6 py-10 md:py-20 [.header+&]:pt-44 [.header+&]:md:pt-32",
         className,
       )}
+      {...props}
     >
       <div
         className={clsx(
