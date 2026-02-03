@@ -1,0 +1,31 @@
+[
+	{
+		"__TYPE__": "SharedSliceContent",
+		"variation": "default",
+		"primary": {
+			"heading": {
+				"__TYPE__": "StructuredTextContent",
+				"value": [
+					{
+						"type": "heading2",
+						"content": {
+							"text": "Tropical"
+						}
+					}
+				]
+			},
+			"description": {
+				"__TYPE__": "StructuredTextContent",
+				"value": [
+					{
+						"type": "paragraph",
+						"content": {
+							"text": "Amet ad veniam veniam labore ut velit anim veniam culpa mollit amet. Ipsum proident aute do culpa dolor Lorem eiusmod dolor reprehenderit non veniam."
+						}
+					}
+				]
+			}
+		},
+		"items": []
+	}
+]
