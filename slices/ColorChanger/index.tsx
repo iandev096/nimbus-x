@@ -27,6 +27,7 @@ const ColorChanger: FC<ColorChangerProps> = ({ slice }) => {
   function handleTextureSelect(texture: KeycapTexture) {
     if (texture.id === selectedTextureId || isAnimating) return;
 
+    setIsAnimating(true);
     setSelectedTextureId(texture.id);
     setBackgroundText(texture.name);
   }
@@ -115,6 +116,7 @@ const ColorChanger: FC<ColorChangerProps> = ({ slice }) => {
                   isAnimating &&
                     "pointer-events-none cursor-not-allowed opacity-50",
                 )}
+                disabled={isAnimating}
               >
                 <div className="mb-3 overflow-hidden rounded border-2 border-black bg-gray-100">
                   <Image
