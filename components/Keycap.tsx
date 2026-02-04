@@ -1,5 +1,5 @@
 import { Float, useGLTF, useTexture } from "@react-three/drei";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as THREE from "three";
 import { GLTF } from "three-stdlib";
 
@@ -12,16 +12,23 @@ type GLTFResult = GLTF & {
 
 interface KeycapProps extends React.ComponentProps<"group"> {
   texture?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  opacity?: number;
 }
 
-export function Keycap({ texture, ...props }: KeycapProps) {
+export function Keycap({ texture, opacity = 1, ...props }: KeycapProps) {
   const { nodes } = useGLTF("/keycap.gltf") as unknown as GLTFResult;
   const [placeholderMat] = useState(() => {
     const mat = new THREE.MeshStandardMaterial({
       roughness: 0.6,
+      transparent: true,
+      opacity: opacity,
     });
     return mat;
   });
+
+  useEffect(() => {
+    placeholderMat.opacity = opacity;
+  }, [opacity, placeholderMat]);
 
   const textures = [
     "/keycap_uv-1.png",
@@ -46,8 +53,8 @@ export function Keycap({ texture, ...props }: KeycapProps) {
   return (
     <group dispose={null} {...props}>
       <mesh
-        castShadow
-        receiveShadow
+        castShadow={opacity === 1}
+        receiveShadow={opacity === 1}
         geometry={nodes.Keycap.geometry}
         material={placeholderMat}
         rotation={[Math.PI / 2, 0, 0]}
@@ -57,11 +64,11 @@ export function Keycap({ texture, ...props }: KeycapProps) {
   );
 }
 
-export function FloatedKeycap({ texture, ...props }: KeycapProps) {
+export function FloatedKeycap({ texture, opacity = 1, ...props }: KeycapProps) {
   return (
     <Float rotationIntensity={2} floatIntensity={0.5}>
       <group {...props}>
-        <Keycap texture={texture} />
+        <Keycap texture={texture} opacity={opacity} />
       </group>
     </Float>
   );
