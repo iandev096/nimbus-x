@@ -4,8 +4,15 @@ import { Bounded } from "@/components/Bounded";
 import { Content } from "@prismicio/client";
 import { PrismicRichText, SliceComponentProps } from "@prismicio/react";
 
+import { useGSAP } from "@gsap/react";
 import { Canvas } from "@react-three/fiber";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { useRef } from "react";
 import { KeyboardExperience } from "./KeyboardExperience";
+
+gsap.registerPlugin(useGSAP, SplitText, ScrollTrigger);
 
 /**
  * Props for `Hero`.
@@ -17,12 +24,82 @@ export type HeroProps = SliceComponentProps<Content.HeroSlice>;
  */
 const Hero = ({ slice }: HeroProps) => {
   const ctaText = slice.primary.buy_button_text?.trim();
+  const tl = useRef<GSAPTimeline>(null);
+
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const split = SplitText.create(".hero-heading", {
+        type: "chars, lines",
+        mask: "lines",
+        linesClass: "lines++",
+      });
+      tl.current = gsap.timeline({
+        delay: 4.1,
+      });
+      tl.current
+        .from(split.chars, {
+          opacity: 0,
+          y: -120,
+          ease: "back",
+          stagger: 0.07,
+        })
+        .fromTo(
+          ".hero-body",
+          { opacity: 0, scale: 0.9, y: 30, x: 50, skewY: 5, skewX: 10 },
+          {
+            opacity: 1,
+            duration: 0.8,
+            scale: 1,
+            y: 0,
+            x: 0,
+            skewY: 0,
+            skewX: 0,
+            ease: "power3.inOut",
+          },
+        );
+
+      gsap.fromTo(
+        ".hero-scene",
+        {
+          background:
+            "linear-gradient(to bottom, #000000, #0f172a, #062f4a, #7fa0b9)",
+        },
+        {
+          background: "linear-gradient(to bottom, #fff, #aed, #ffe, #fff)",
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "50% bottom",
+            scrub: 1,
+          },
+        },
+      );
+    });
+
+    mm.add("(prefers-reduced-motion: reduce)", () => {
+      tl.current = gsap.timeline({
+        delay: 4.1,
+      });
+      tl.current.fromTo(
+        ".hero-heading, .hero-body",
+        {
+          opacity: 0,
+        },
+        {
+          opacity: 1,
+          duration: 0.8,
+          ease: "power3.inOut",
+        },
+      );
+    });
+  });
 
   return (
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className="blue-gradient-bg relative h-dvh text-white text-shadow-black/30 text-shadow-lg"
+      className="hero relative h-dvh text-white text-shadow-black/30 text-shadow-lg motion-safe:h-[300vh]"
     >
       <div className="hero-scene pointer-events-none sticky top-0 h-dvh w-full">
         <Canvas shadows="variance">
