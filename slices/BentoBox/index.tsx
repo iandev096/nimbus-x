@@ -23,6 +23,7 @@ const BentoBox: FC<BentoBoxProps> = ({ slice }) => {
     <Bounded
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
+      className="bg-white"
     >
       <FadeIn>
         <h2 className="font-bold-slanted mb-8 scroll-pt-6 text-6xl uppercase md:text-8xl">

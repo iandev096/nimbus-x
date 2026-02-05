@@ -7,12 +7,12 @@ import { PrismicRichText, SliceComponentProps } from "@prismicio/react";
 import { useGSAP } from "@gsap/react";
 import { Canvas } from "@react-three/fiber";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useRef } from "react";
 import { KeyboardExperience } from "./KeyboardExperience";
 
-gsap.registerPlugin(useGSAP);
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(useGSAP, SplitText, ScrollTrigger);
 
 /**
  * Props for `Hero`.
@@ -58,6 +58,23 @@ const Hero = ({ slice }: HeroProps) => {
             ease: "power3.inOut",
           },
         );
+
+      gsap.fromTo(
+        ".hero-scene",
+        {
+          background:
+            "linear-gradient(to bottom, #000000, #0f172a, #062f4a, #7fa0b9)",
+        },
+        {
+          background: "linear-gradient(to bottom, #fff, #aed, #ffe, #fff)",
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "50% bottom",
+            scrub: 1,
+          },
+        },
+      );
     });
 
     mm.add("(prefers-reduced-motion: reduce)", () => {
@@ -82,7 +99,7 @@ const Hero = ({ slice }: HeroProps) => {
     <section
       data-slice-type={slice.slice_type}
       data-slice-variation={slice.variation}
-      className="blue-gradient-bg relative h-dvh text-white text-shadow-black/30 text-shadow-lg"
+      className="hero relative h-dvh text-white text-shadow-black/30 text-shadow-lg motion-safe:h-[300vh]"
     >
       <div className="hero-scene pointer-events-none sticky top-0 h-dvh w-full">
         <Canvas shadows="variance">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Keyboard } from "@/components/Keyboard";
+import { Keyboard, KeyboardRefs } from "@/components/Keyboard";
 import { FloatedKeycap } from "@/components/Keycap";
 import { useGSAP } from "@gsap/react";
 import { Environment, PerspectiveCamera } from "@react-three/drei";
@@ -70,8 +70,11 @@ function CameraController() {
 }
 
 export function KeyboardExperience() {
+  const keycapsGroupRef = useRef<THREE.Group>(null);
   const keyboardGroupRef = useRef<THREE.Group>(null);
+  const keyboardAnimRef = useRef<KeyboardRefs | null>(null);
   const tl = useRef<GSAPTimeline>(null);
+  const scrollTl = useRef<GSAPTimeline>(null);
 
   const [scalingFactor, setScalingFactor] = useState(1);
   const [lightIntensityScaler, setLightIntensityScaler] = useState(0);
@@ -95,8 +98,17 @@ export function KeyboardExperience() {
     const mm = gsap.matchMedia();
     mm.add("(prefers-reduced-motion: no-preference)", () => {
       if (!keyboardGroupRef.current) return;
+      if (!keycapsGroupRef.current) return;
+
+      if (typeof window !== "undefined") {
+        const initialScrollY = window.scrollY;
+        if (initialScrollY === 0) {
+          document.body.style.overflow = "hidden";
+        }
+      }
 
       const keyboard = keyboardGroupRef.current;
+      const keycaps = keycapsGroupRef.current;
 
       tl.current = gsap.timeline({
         ease: "power2.out",
@@ -141,7 +153,225 @@ export function KeyboardExperience() {
             duration: 2,
           },
           "<",
-        );
+        )
+        .call(() => {
+          if (typeof window !== "undefined") {
+            document.body.style.overflow = "";
+          }
+          if (!keyboard) return;
+
+          scrollTl.current = gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 1,
+              },
+            })
+            .to(keyboard.position, {
+              x: 0,
+              y: -0.5,
+              z: 2.2,
+            })
+            .to(
+              keyboard.rotation,
+              {
+                x: Math.PI * -2 + 0.8,
+                y: 0,
+                z: 0,
+                ease: "power2.out",
+              },
+              "<",
+            )
+            .to(
+              keycaps.scale,
+              {
+                x: 5,
+                y: 5,
+                z: 5,
+                duration: 1,
+                ease: "power2.out",
+              },
+              "-=0.5",
+            );
+
+          // Add wave animation to the scroll timeline
+          if (keyboardAnimRef.current) {
+            // Collect all switches and keycaps from all rows
+            const switchRefs = keyboardAnimRef.current.switches;
+            const individualKeys = keyboardAnimRef.current.keys;
+
+            // Collect all switches into a single array
+            const allSwitches: THREE.Object3D[] = [];
+
+            // Gather all switches from all rows
+            [
+              switchRefs.functionRow.current,
+              switchRefs.numberRow.current,
+              switchRefs.topRow.current,
+              switchRefs.homeRow.current,
+              switchRefs.bottomRow.current,
+              switchRefs.modifiers.current,
+              switchRefs.arrows.current,
+            ].forEach((row) => {
+              if (row) {
+                allSwitches.push(...Array.from(row.children));
+              }
+            });
+
+            // Define keycaps in actual left-to-right COLUMN order across the keyboard
+            const keyboardColumns = [
+              ["esc", "grave", "tab", "caps", "lshift", "lcontrol"],
+              ["f1", "one", "q", "a", "z", "lalt"],
+              ["f2", "two", "w", "s", "x", "lwin"],
+              ["f3", "three", "e", "d", "c"],
+              ["f4", "four", "r", "f", "v"],
+              ["f5", "five", "t", "g", "b", "space"],
+              ["f6", "six", "y", "h", "n"],
+              ["f7", "seven", "u", "j", "m"],
+              ["f8", "eight", "i", "k", "comma"],
+              ["f9", "nine", "o", "l", "period"],
+              ["f10", "zero", "dash", "p", "semicolon", "slash", "ralt"],
+              [
+                "f11",
+                "lsquarebracket",
+                "quote",
+                "rshift",
+                "fn",
+                "arrowleft",
+                "rsquarebracket",
+                "enter",
+                "f12",
+                "equal",
+                "arrowup",
+              ],
+              [],
+              [
+                "del",
+                "backspace",
+                "backslash",
+                "pagedown",
+                "end",
+                "arrowdown",
+                "pageup",
+                "arrowright",
+              ],
+              [],
+            ];
+
+            // Group keycaps and switches by column
+            const keyCapsByColumn: THREE.Mesh[][] = [];
+            const switchesByColumn: THREE.Object3D[][] = [];
+
+            // Sort switches by X position to match column order
+            const sortedSwitches = allSwitches.sort(
+              (a, b) => a.position.x - b.position.x,
+            );
+
+            keyboardColumns.forEach((column, columnIndex) => {
+              const columnKeycaps: THREE.Mesh[] = [];
+              const columnSwitches: THREE.Object3D[] = [];
+
+              column.forEach((keyName) => {
+                if (keyName && individualKeys[keyName]?.current) {
+                  columnKeycaps.push(individualKeys[keyName].current);
+                }
+              });
+
+              // Assign switches to columns based on their count
+              const switchesPerColumn = Math.ceil(
+                sortedSwitches.length / keyboardColumns.length,
+              );
+              const startIndex = columnIndex * switchesPerColumn;
+              const endIndex = Math.min(
+                startIndex + switchesPerColumn,
+                sortedSwitches.length,
+              );
+
+              for (let i = startIndex; i < endIndex; i++) {
+                if (sortedSwitches[i]) {
+                  columnSwitches.push(sortedSwitches[i]);
+                }
+              }
+
+              keyCapsByColumn.push(columnKeycaps);
+              switchesByColumn.push(columnSwitches);
+            });
+
+            // Add wave animation for each column to the scroll timeline
+            keyCapsByColumn.forEach((columnKeycaps, columnIndex) => {
+              const columnSwitches = switchesByColumn[columnIndex];
+
+              if (columnKeycaps.length === 0 && columnSwitches.length === 0)
+                return;
+
+              if (!scrollTl.current) return;
+
+              // Calculate wave timing - spread across scroll timeline
+              const waveProgress = columnIndex / (keyboardColumns.length - 1); // 0 to 1
+              const waveStartTime = waveProgress * 2 + 0.5; // Spread wave across 2 time units
+
+              // Animate keycaps up then down
+              if (columnKeycaps.length > 0) {
+                const keycapPositions = columnKeycaps.map(
+                  (keycap) => keycap.position,
+                );
+
+                // Create temporary keyframe for wave peak
+                scrollTl.current.to(
+                  keycapPositions,
+                  {
+                    y: "+=0.08", // Lift keycaps up
+                    duration: 0.5,
+                    ease: "power2.inOut",
+                  },
+                  waveStartTime,
+                );
+
+                // Return to original position
+                scrollTl.current.to(
+                  keycapPositions,
+                  {
+                    y: "-=0.08", // Bring keycaps back down
+                    duration: 0.5,
+                    ease: "power2.inOut",
+                  },
+                  waveStartTime + 0.5,
+                );
+              }
+
+              // Animate switches (follow keycaps with delay and less movement)
+              if (columnSwitches.length > 0) {
+                const switchPositions = columnSwitches.map(
+                  (switchObj) => switchObj.position,
+                );
+
+                // Up phase (slightly delayed and lower)
+                scrollTl.current.to(
+                  switchPositions,
+                  {
+                    y: "+=0.04", // Less movement for switches
+                    duration: 0.3,
+                    ease: "power2.inOut",
+                  },
+                  waveStartTime + 0.2, // Slight delay
+                );
+
+                // Down phase
+                scrollTl.current.to(
+                  switchPositions,
+                  {
+                    y: "-=0.04",
+                    duration: 0.3,
+                    ease: "power2.inOut",
+                  },
+                  waveStartTime + 0.5,
+                );
+              }
+            });
+          }
+        });
     });
   });
 
@@ -150,7 +380,7 @@ export function KeyboardExperience() {
       <group>
         <CameraController />
         <PerspectiveCamera position={[0, 0, 4]} fov={50} makeDefault />
-        <ambientLight intensity={0.1 * lightIntensityScaler} />
+        <ambientLight intensity={0.2 * lightIntensityScaler} />
 
         <group scale={scalingFactor}>
           <group
@@ -158,9 +388,14 @@ export function KeyboardExperience() {
             // position={[0.2, -0.5, 1.7]}
             // rotation={[1.6, 0.4, 0]}
           >
-            <Keyboard scale={9} castShadow receiveShadow />
+            <Keyboard
+              scale={9}
+              castShadow
+              receiveShadow
+              ref={keyboardAnimRef}
+            />
           </group>
-          <group>
+          <group ref={keycapsGroupRef}>
             <FloatedKeycap
               position={[0, -0.4, 2.6]}
               rotation={[0, 2, 3]}
@@ -211,7 +446,7 @@ export function KeyboardExperience() {
 
         <Environment
           files={["/hdr/blue-studio.hdr"]}
-          environmentIntensity={0.08 * lightIntensityScaler}
+          environmentIntensity={0.1 * lightIntensityScaler}
         />
         <directionalLight
           intensity={2.5 * lightIntensityScaler}

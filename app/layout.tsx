@@ -21,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${robotoFlex.variable} antialiased`}>{children}</body>
+      <body className={`${robotoFlex.variable} bg-black antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }
